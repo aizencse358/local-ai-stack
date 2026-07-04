@@ -12,3 +12,4 @@ class ChatRequest(BaseModel):
     messages: list[ChatMessage]
     model: Optional[str] = None
     system: Optional[str] = None
+    context: Optional[str] = None

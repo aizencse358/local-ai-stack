@@ -25,20 +25,23 @@
   font-size: 15px;
 }
 
-.system-prompt {
+.system-prompt,
+.document-context {
   margin-bottom: 16px;
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 8px 12px;
 }
 
-.system-prompt summary {
+.system-prompt summary,
+.document-context summary {
   cursor: pointer;
   font-size: 14px;
   color: var(--text);
 }
 
-.system-prompt textarea {
+.system-prompt textarea,
+.document-context textarea {
   width: 100%;
   margin-top: 8px;
   box-sizing: border-box;

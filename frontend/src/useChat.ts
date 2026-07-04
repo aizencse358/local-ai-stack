@@ -9,7 +9,7 @@ export function useChat() {
   const abortRef = useRef<AbortController | null>(null)
 
   const sendMessage = useCallback(
-    async (content: string, system?: string) => {
+    async (content: string, options?: { system?: string; context?: string }) => {
       const userMessage: ChatMessage = { role: 'user', content }
       const history = [...messages, userMessage]
       setMessages([...history, { role: 'assistant', content: '' }])
@@ -22,7 +22,11 @@ export function useChat() {
         const response = await fetch(`${BACKEND_URL}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages: history, system: system || undefined }),
+          body: JSON.stringify({
+            messages: history,
+            system: options?.system || undefined,
+            context: options?.context || undefined,
+          }),
           signal: controller.signal,
         })
 

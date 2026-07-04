@@ -27,8 +27,18 @@ async def health() -> dict:
 @app.post("/api/chat")
 async def chat(request: ChatRequest) -> StreamingResponse:
     messages = list(request.messages)
+
+    system_parts = []
     if request.system:
-        messages.insert(0, ChatMessage(role="system", content=request.system))
+        system_parts.append(request.system)
+    if request.context:
+        system_parts.append(
+            "Use the following document to answer the user's questions. "
+            "If the answer isn't in the document, say so instead of guessing.\n\n"
+            f"---\n{request.context}\n---"
+        )
+    if system_parts:
+        messages.insert(0, ChatMessage(role="system", content="\n\n".join(system_parts)))
 
     return StreamingResponse(
         stream_chat(messages, model=request.model),

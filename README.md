@@ -68,9 +68,14 @@ backend at `http://localhost:8000` (configurable via `VITE_BACKEND_URL`).
 {
   "messages": [{ "role": "user", "content": "hello" }],
   "system": "optional system prompt",
+  "context": "optional document text for basic Knowledge Q&A",
   "model": "llama3.2"
 }
 ```
+
+`context` is folded into the system message with instructions to answer from
+the document (or say so if the answer isn't there) — this powers the
+"Document context" field in the UI.
 
 Response is `text/event-stream`, each event a JSON payload:
 `data: {"token": "..."}\n\n`, terminated by `data: [DONE]\n\n`.
@@ -79,5 +84,5 @@ Response is `text/event-stream`, each event a JSON payload:
 
 - [x] Streaming Chat UI
 - [x] System prompt field (persona/instructions)
-- [ ] Paste document content into system prompt (basic Knowledge Q&A)
+- [x] Paste document content into system prompt (basic Knowledge Q&A)
 - [ ] Proper RAG with chunking + embeddings (`nomic-embed-text` + ChromaDB/FAISS)
