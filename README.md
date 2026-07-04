@@ -32,12 +32,13 @@ Backend will be available at `http://localhost:8000`, with a health check at
 
 ## Running the backend locally (without Docker)
 
+Uses [uv](https://docs.astral.sh/uv/) for dependency management.
+
 ```bash
 cd backend
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+uv sync
 cp .env.example .env
-uvicorn app.main:app --reload
+uv run uvicorn app.main:app --reload
 ```
 
 Requires Ollama running locally on `localhost:11434` with a model pulled
