@@ -7,13 +7,17 @@ frontend UI wire together end-to-end.
 
 - **Ollama** — local LLM runtime
 - **FastAPI** — backend middleware (prompts, streaming, context)
-- **React** — frontend chat UI (token-by-token rendering)
+- **React + TypeScript (Vite)** — frontend chat UI (token-by-token rendering)
 
 ## Milestone 1: Streaming Chat UI
 
 React sends a message to FastAPI, FastAPI forwards it to Ollama and streams
 the response back over Server-Sent Events (SSE), and React renders tokens
 as they arrive.
+
+| Waiting for a response | Streamed response |
+| --- | --- |
+| ![Typing indicator](docs/screenshots/typing-indicator.png) | ![Chat response](docs/screenshots/chat-response.png) |
 
 ## Running with Docker
 
@@ -44,6 +48,20 @@ uv run uvicorn app.main:app --reload
 Requires Ollama running locally on `localhost:11434` with a model pulled
 (`ollama pull llama3.2`).
 
+## Running the frontend locally
+
+Requires Node 18+.
+
+```bash
+cd frontend
+npm install
+cp .env.example .env
+npm run dev
+```
+
+Frontend will be available at `http://localhost:5173` and expects the
+backend at `http://localhost:8000` (configurable via `VITE_BACKEND_URL`).
+
 ## `POST /api/chat`
 
 ```json
@@ -60,6 +78,6 @@ Response is `text/event-stream`, each event a JSON payload:
 ## Roadmap
 
 - [x] Streaming Chat UI
-- [ ] System prompt field (persona/instructions)
+- [x] System prompt field (persona/instructions)
 - [ ] Paste document content into system prompt (basic Knowledge Q&A)
 - [ ] Proper RAG with chunking + embeddings (`nomic-embed-text` + ChromaDB/FAISS)
