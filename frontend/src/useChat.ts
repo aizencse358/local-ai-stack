@@ -33,8 +33,9 @@ export function useChat() {
         const reader = response.body.getReader()
         const decoder = new TextDecoder()
         let buffer = ''
+        let streamDone = false
 
-        while (true) {
+        while (!streamDone) {
           const { done, value } = await reader.read()
           if (done) break
 
@@ -45,7 +46,13 @@ export function useChat() {
           for (const line of lines) {
             if (!line.startsWith('data: ')) continue
             const payload = line.slice('data: '.length)
-            if (payload === '[DONE]') continue
+            if (payload === '[DONE]') {
+              // Stop on the application-level sentinel rather than waiting for
+              // the transport stream to close, which can lag behind or never
+              // resolve depending on proxy/keep-alive behavior.
+              streamDone = true
+              break
+            }
 
             const { token } = JSON.parse(payload) as { token: string }
             setMessages((prev) => {
@@ -56,6 +63,8 @@ export function useChat() {
             })
           }
         }
+
+        await reader.cancel().catch(() => {})
       } catch (err) {
         if (err instanceof Error && err.name !== 'AbortError') {
           setMessages((prev) => {

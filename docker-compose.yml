@@ -17,5 +17,15 @@ services:
     depends_on:
       - ollama
 
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_BACKEND_URL: http://localhost:8000
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
 volumes:
   ollama_data:
