@@ -13,7 +13,11 @@ services:
     environment:
       OLLAMA_URL: http://ollama:11434
       OLLAMA_MODEL: llama3.2
+      EMBED_MODEL: nomic-embed-text
+      CHROMA_PERSIST_DIR: /app/chroma_data
       CORS_ORIGINS: http://localhost:5173,http://localhost:3000
+    volumes:
+      - chroma_data:/app/chroma_data
     depends_on:
       - ollama
 
@@ -29,3 +33,4 @@ services:
 
 volumes:
   ollama_data:
+  chroma_data:

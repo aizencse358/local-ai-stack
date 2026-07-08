@@ -35,6 +35,19 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
             ) : (
               <p className="message-content">{message.content}</p>
             )}
+            {message.sources && message.sources.length > 0 && (
+              <details className="sources">
+                <summary>Sources ({message.sources.length})</summary>
+                <ul>
+                  {message.sources.map((source, j) => (
+                    <li key={j}>
+                      <strong>{source.filename}</strong>
+                      <p>{source.text}</p>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            )}
           </div>
         )
       })}

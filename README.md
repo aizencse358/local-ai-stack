@@ -77,12 +77,38 @@ backend at `http://localhost:8000` (configurable via `VITE_BACKEND_URL`).
 the document (or say so if the answer isn't there) — this powers the
 "Document context" field in the UI.
 
-Response is `text/event-stream`, each event a JSON payload:
-`data: {"token": "..."}\n\n`, terminated by `data: [DONE]\n\n`.
+Set `rag: true` to instead retrieve relevant chunks from uploaded documents
+(see `POST /api/documents` below) and fold those into the system message.
+`context` and `rag` can be combined; each is folded in independently.
+
+Response is `text/event-stream`. When `rag` retrieves results, the first
+event is `data: {"sources": [{"filename": ..., "text": ..., "score": ...}, ...]}\n\n`,
+followed by token events `data: {"token": "..."}\n\n`, terminated by
+`data: [DONE]\n\n`.
+
+## `POST /api/documents`
+
+Multipart upload (`.txt`/`.md`). Chunks the document, embeds each chunk with
+`nomic-embed-text` via Ollama, and stores the vectors in a local ChromaDB
+collection for retrieval by `/api/chat` when `rag: true`.
+
+```bash
+curl -F "file=@notes.md" http://localhost:8000/api/documents
+# {"document_id": "...", "filename": "notes.md", "chunk_count": 12}
+```
+
+`GET /api/documents` lists indexed documents (`id`, `filename`, `chunk_count`).
+`DELETE /api/documents/{document_id}` removes a document and its chunks.
+
+Requires the embedding model to be pulled into Ollama:
+
+```bash
+docker compose exec ollama ollama pull nomic-embed-text
+```
 
 ## Roadmap
 
 - [x] Streaming Chat UI
 - [x] System prompt field (persona/instructions)
 - [x] Paste document content into system prompt (basic Knowledge Q&A)
-- [ ] Proper RAG with chunking + embeddings (`nomic-embed-text` + ChromaDB/FAISS)
+- [x] Proper RAG with chunking + embeddings (`nomic-embed-text` + ChromaDB)

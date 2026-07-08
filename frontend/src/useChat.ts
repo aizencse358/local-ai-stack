@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react'
-import type { ChatMessage } from './types'
+import type { ChatMessage, RetrievedChunk } from './types'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000'
 
@@ -9,7 +9,7 @@ export function useChat() {
   const abortRef = useRef<AbortController | null>(null)
 
   const sendMessage = useCallback(
-    async (content: string, options?: { system?: string; context?: string }) => {
+    async (content: string, options?: { system?: string; context?: string; rag?: boolean }) => {
       const userMessage: ChatMessage = { role: 'user', content }
       const history = [...messages, userMessage]
       setMessages([...history, { role: 'assistant', content: '' }])
@@ -26,6 +26,7 @@ export function useChat() {
             messages: history,
             system: options?.system || undefined,
             context: options?.context || undefined,
+            rag: options?.rag || undefined,
           }),
           signal: controller.signal,
         })
@@ -58,11 +59,22 @@ export function useChat() {
               break
             }
 
-            const { token } = JSON.parse(payload) as { token: string }
+            const parsed = JSON.parse(payload) as { token?: string; sources?: RetrievedChunk[] }
+
+            if (parsed.sources) {
+              setMessages((prev) => {
+                const next = [...prev]
+                const last = next[next.length - 1]
+                next[next.length - 1] = { ...last, sources: parsed.sources }
+                return next
+              })
+              continue
+            }
+
             setMessages((prev) => {
               const next = [...prev]
               const last = next[next.length - 1]
-              next[next.length - 1] = { ...last, content: last.content + token }
+              next[next.length - 1] = { ...last, content: last.content + (parsed.token ?? '') }
               return next
             })
           }

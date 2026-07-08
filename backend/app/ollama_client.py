@@ -9,6 +9,7 @@ from app.schemas import ChatMessage
 
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
 DEFAULT_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2")
+EMBED_MODEL = os.getenv("EMBED_MODEL", "nomic-embed-text")
 
 
 async def stream_chat(
@@ -38,3 +39,16 @@ async def stream_chat(
                 token = chunk.get("message", {}).get("content", "")
                 if token:
                     yield f"data: {json.dumps({'token': token})}\n\n"
+
+
+async def embed(texts: list[str], model: Optional[str] = None) -> list[list[float]]:
+    """Embed a batch of texts via Ollama's embeddings endpoint."""
+    payload = {
+        "model": model or EMBED_MODEL,
+        "input": texts,
+    }
+
+    async with httpx.AsyncClient(timeout=None) as client:
+        response = await client.post(f"{OLLAMA_URL}/api/embed", json=payload)
+        response.raise_for_status()
+        return response.json()["embeddings"]
