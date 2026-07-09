@@ -1,4 +1,7 @@
+import io
 import json
+
+from docx import Document
 
 
 def parse_sse(text: str) -> list[dict | str]:
@@ -55,6 +58,39 @@ def test_document_ingest_rejects_empty_file(client, tmp_env, monkeypatch, fake_e
     response = client.post(
         "/api/documents", files={"file": ("empty.txt", b"   ", "text/plain")}
     )
+    assert response.status_code == 400
+
+
+def test_document_ingest_accepts_docx(client, tmp_env, monkeypatch, fake_embed):
+    monkeypatch.setattr(tmp_env, "embed", fake_embed)
+
+    document = Document()
+    document.add_paragraph("Hello from a real docx file, repeated for bulk. " * 50)
+    buffer = io.BytesIO()
+    document.save(buffer)
+
+    response = client.post(
+        "/api/documents",
+        files={
+            "file": (
+                "notes.docx",
+                buffer.getvalue(),
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            )
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["chunk_count"] > 0
+
+
+def test_document_ingest_rejects_unsupported_extension(client, tmp_env, monkeypatch, fake_embed):
+    monkeypatch.setattr(tmp_env, "embed", fake_embed)
+
+    response = client.post(
+        "/api/documents", files={"file": ("notes.xyz", b"whatever", "application/octet-stream")}
+    )
+
     assert response.status_code == 400
 
 

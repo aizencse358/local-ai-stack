@@ -90,7 +90,7 @@ followed by token events `data: {"token": "..."}\n\n`, terminated by
 
 ## `POST /api/documents`
 
-Multipart upload (`.txt`/`.md`). Chunks the document, embeds each chunk with
+Multipart upload (`.txt`/`.md`/`.pdf`/`.docx`). Chunks the document, embeds each chunk with
 `nomic-embed-text` via Ollama, and stores the vectors in a local ChromaDB
 collection for retrieval by `/api/chat` when `rag: true`.
 

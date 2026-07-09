@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
 from app.chunking import chunk_text
+from app.extract import extract_text
 from app.ollama_client import embed, list_models, stream_chat
 from app.rerank import rerank
 from app.schemas import (
@@ -49,8 +50,13 @@ async def get_models() -> list[str]:
 
 @app.post("/api/documents", response_model=IngestResponse)
 async def ingest_document(file: UploadFile = File(...)) -> IngestResponse:
-    raw = (await file.read()).decode("utf-8", errors="ignore")
-    chunks = chunk_text(raw)
+    raw = await file.read()
+    try:
+        text = extract_text(file.filename, raw)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    chunks = chunk_text(text)
     if not chunks:
         raise HTTPException(status_code=400, detail="Document is empty after chunking")
 

@@ -66,7 +66,7 @@ export function DocumentUpload({ ragEnabled, onRagToggle }: DocumentUploadProps)
         Use uploaded documents to answer
       </label>
 
-      <input type="file" accept=".txt,.md" onChange={handleUpload} />
+      <input type="file" accept=".txt,.md,.pdf,.docx" onChange={handleUpload} />
       {status && <p className="upload-status">{status}</p>}
 
       <ul className="document-list">
