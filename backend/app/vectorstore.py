@@ -6,7 +6,9 @@ import chromadb
 CHROMA_DIR = os.getenv("CHROMA_PERSIST_DIR", "./chroma_data")
 
 _client = chromadb.PersistentClient(path=CHROMA_DIR)
-_collection = _client.get_or_create_collection("documents")
+_collection = _client.get_or_create_collection(
+    "documents", metadata={"hnsw:space": "cosine"}
+)
 
 
 def add_document(filename: str, chunks: list[str], embeddings: list[list[float]]) -> str:
@@ -33,7 +35,9 @@ def query(query_embedding: list[float], top_k: int = 4) -> list[dict]:
             {
                 "filename": metadata.get("filename", "unknown"),
                 "text": text,
-                "score": distance,
+                # Chroma's cosine "distance" is 1 - cosine_similarity, so this
+                # converts it back into an intuitive 0-1 similarity score.
+                "score": 1 - distance,
             }
         )
     return hits
