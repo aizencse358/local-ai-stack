@@ -82,3 +82,22 @@ def test_complete_returns_full_text_and_sends_non_streaming_payload(monkeypatch)
     assert captured["body"]["stream"] is False
     assert captured["body"]["messages"] == [{"role": "user", "content": "rank these"}]
     assert captured["body"]["model"] == ollama_client.DEFAULT_MODEL
+
+
+def test_list_models_returns_model_names(monkeypatch):
+    import app.ollama_client as ollama_client
+
+    captured = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["url"] = str(request.url)
+        return httpx.Response(
+            200, json={"models": [{"name": "llama3.2"}, {"name": "gemma4:12b"}]}
+        )
+
+    _patch_async_client(monkeypatch, ollama_client, handler)
+
+    result = asyncio.run(ollama_client.list_models())
+
+    assert result == ["llama3.2", "gemma4:12b"]
+    assert captured["url"].endswith("/api/tags")

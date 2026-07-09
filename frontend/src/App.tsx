@@ -6,6 +6,7 @@ import { SystemPromptField } from './components/SystemPromptField'
 import { DocumentContextField } from './components/DocumentContextField'
 import { DocumentUpload } from './components/DocumentUpload'
 import { SessionList } from './components/SessionList'
+import { ModelPicker } from './components/ModelPicker'
 import './App.css'
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
   const [systemPrompt, setSystemPrompt] = useState('')
   const [documentContext, setDocumentContext] = useState('')
   const [ragEnabled, setRagEnabled] = useState(false)
+  const [selectedModel, setSelectedModel] = useState('')
 
   const handleNewChat = () => {
     setCurrentSessionId(null)
@@ -25,6 +27,7 @@ function App() {
       <header className="app-header">
         <h1>Local AI Chat</h1>
         <p>Ollama + FastAPI + React, streaming token by token.</p>
+        <ModelPicker value={selectedModel} onChange={setSelectedModel} />
       </header>
 
       <SessionList
@@ -50,6 +53,7 @@ function App() {
             context: documentContext,
             rag: ragEnabled,
             sessionId: currentSessionId,
+            model: selectedModel,
           })
         }
       />

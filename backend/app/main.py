@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
 from app.chunking import chunk_text
-from app.ollama_client import embed, stream_chat
+from app.ollama_client import embed, list_models, stream_chat
 from app.rerank import rerank
 from app.schemas import (
     ChatMessage,
@@ -40,6 +40,11 @@ app.add_middleware(
 @app.get("/api/health")
 async def health() -> dict:
     return {"status": "ok"}
+
+
+@app.get("/api/models", response_model=list[str])
+async def get_models() -> list[str]:
+    return await list_models()
 
 
 @app.post("/api/documents", response_model=IngestResponse)

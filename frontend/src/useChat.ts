@@ -11,7 +11,13 @@ export function useChat(onSessionCreated?: (id: string) => void) {
   const sendMessage = useCallback(
     async (
       content: string,
-      options?: { system?: string; context?: string; rag?: boolean; sessionId?: string | null },
+      options?: {
+        system?: string
+        context?: string
+        rag?: boolean
+        sessionId?: string | null
+        model?: string
+      },
     ) => {
       const userMessage: ChatMessage = { role: 'user', content }
       const history = [...messages, userMessage]
@@ -31,6 +37,7 @@ export function useChat(onSessionCreated?: (id: string) => void) {
             context: options?.context || undefined,
             rag: options?.rag || undefined,
             session_id: options?.sessionId || undefined,
+            model: options?.model || undefined,
           }),
           signal: controller.signal,
         })

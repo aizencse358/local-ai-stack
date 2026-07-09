@@ -25,6 +25,17 @@
   font-size: 15px;
 }
 
+.model-picker {
+  margin-top: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-h);
+  font: inherit;
+  font-size: 14px;
+}
+
 .system-prompt,
 .document-context,
 .document-upload,

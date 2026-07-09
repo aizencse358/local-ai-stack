@@ -67,3 +67,11 @@ async def complete(prompt: str, model: Optional[str] = None) -> str:
         response = await client.post(f"{OLLAMA_URL}/api/chat", json=payload)
         response.raise_for_status()
         return response.json()["message"]["content"]
+
+
+async def list_models() -> list[str]:
+    """List locally pulled Ollama model names."""
+    async with httpx.AsyncClient(timeout=None) as client:
+        response = await client.get(f"{OLLAMA_URL}/api/tags")
+        response.raise_for_status()
+        return [m["name"] for m in response.json()["models"]]

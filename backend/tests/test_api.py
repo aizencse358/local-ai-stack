@@ -17,6 +17,18 @@ def test_health(client):
     assert response.json() == {"status": "ok"}
 
 
+def test_get_models(client, tmp_env, monkeypatch):
+    async def fake_list_models():
+        return ["llama3.2", "gemma4:12b"]
+
+    monkeypatch.setattr(tmp_env, "list_models", fake_list_models)
+
+    response = client.get("/api/models")
+
+    assert response.status_code == 200
+    assert response.json() == ["llama3.2", "gemma4:12b"]
+
+
 def test_document_ingest_list_delete(client, tmp_env, monkeypatch, fake_embed):
     monkeypatch.setattr(tmp_env, "embed", fake_embed)
 
