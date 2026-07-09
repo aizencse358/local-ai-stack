@@ -1,12 +1,14 @@
 import json
 import os
+import time
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
 from app.chunking import chunk_text
 from app.extract import extract_text
+from app.observability import configure_logging, logger
 from app.ollama_client import embed, list_models, stream_chat
 from app.rerank import rerank
 from app.schemas import (
@@ -26,6 +28,8 @@ from app.sessions import (
 )
 from app.vectorstore import add_document, delete_document, list_documents, query
 
+configure_logging()
+
 app = FastAPI(title="Local AI Stack Backend")
 
 origins = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000").split(",")
@@ -36,6 +40,21 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start = time.perf_counter()
+    response = await call_next(request)
+    duration_ms = round((time.perf_counter() - start) * 1000, 1)
+    logger.info(
+        "event=request method=%s path=%s status=%d duration_ms=%s",
+        request.method,
+        request.url.path,
+        response.status_code,
+        duration_ms,
+    )
+    return response
 
 
 @app.get("/api/health")
@@ -50,6 +69,8 @@ async def get_models() -> list[str]:
 
 @app.post("/api/documents", response_model=IngestResponse)
 async def ingest_document(file: UploadFile = File(...)) -> IngestResponse:
+    start = time.perf_counter()
+
     raw = await file.read()
     try:
         text = extract_text(file.filename, raw)
@@ -62,6 +83,15 @@ async def ingest_document(file: UploadFile = File(...)) -> IngestResponse:
 
     embeddings = await embed(chunks)
     document_id = add_document(file.filename, chunks, embeddings)
+
+    duration_ms = round((time.perf_counter() - start) * 1000, 1)
+    logger.info(
+        "event=document_ingested filename=%s chunk_count=%d duration_ms=%s",
+        file.filename,
+        len(chunks),
+        duration_ms,
+    )
+
     return IngestResponse(document_id=document_id, filename=file.filename, chunk_count=len(chunks))
 
 
@@ -94,6 +124,10 @@ async def remove_session(session_id: str) -> None:
 
 
 async def _chat_stream(request: ChatRequest):
+    start = time.perf_counter()
+    ttft_ms = None
+    token_count = 0
+
     messages = list(request.messages)
 
     session_id = get_or_create_session(request.session_id, request.messages[-1].content)
@@ -133,10 +167,30 @@ async def _chat_stream(request: ChatRequest):
     async for chunk in stream_chat(messages, model=request.model):
         if chunk.startswith("data: ") and chunk.strip() != "data: [DONE]":
             payload = json.loads(chunk[len("data: ") :])
-            assistant_text += payload.get("token", "")
+            token = payload.get("token", "")
+            assistant_text += token
+            if token:
+                token_count += 1
+                if ttft_ms is None:
+                    ttft_ms = round((time.perf_counter() - start) * 1000, 1)
         yield chunk
 
     add_message(session_id, "assistant", assistant_text, sources=hits or None)
+
+    total_ms = round((time.perf_counter() - start) * 1000, 1)
+    top_score = round(hits[0]["score"], 3) if hits else None
+    logger.info(
+        "event=chat_completed session_id=%s model=%s rag=%s hit_count=%d top_score=%s "
+        "ttft_ms=%s total_ms=%s tokens=%d",
+        session_id,
+        request.model or "default",
+        request.rag,
+        len(hits),
+        top_score,
+        ttft_ms,
+        total_ms,
+        token_count,
+    )
 
 
 @app.post("/api/chat")
