@@ -104,7 +104,12 @@ def test_chat_with_rag_streams_and_persists_sources(
     monkeypatch.setattr(tmp_env, "embed", fake_embed)
     monkeypatch.setattr(tmp_env, "stream_chat", fake_stream_chat)
     canned_hits = [{"filename": "doc.txt", "text": "relevant excerpt", "score": 0.87}]
-    monkeypatch.setattr(tmp_env, "query", lambda embedding, top_k=4: canned_hits)
+    monkeypatch.setattr(tmp_env, "query", lambda embedding, top_k=10: canned_hits)
+
+    async def fake_rerank(query, candidates, top_k=4):
+        return candidates[:top_k]
+
+    monkeypatch.setattr(tmp_env, "rerank", fake_rerank)
 
     response = client.post(
         "/api/chat",

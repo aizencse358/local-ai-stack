@@ -63,3 +63,22 @@ def test_stream_chat_yields_sse_tokens_then_done(monkeypatch):
         f"data: {json.dumps({'token': ' there'})}\n\n",
         "data: [DONE]\n\n",
     ]
+
+
+def test_complete_returns_full_text_and_sends_non_streaming_payload(monkeypatch):
+    import app.ollama_client as ollama_client
+
+    captured = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["body"] = json.loads(request.content)
+        return httpx.Response(200, json={"message": {"content": "the answer"}})
+
+    _patch_async_client(monkeypatch, ollama_client, handler)
+
+    result = asyncio.run(ollama_client.complete("rank these"))
+
+    assert result == "the answer"
+    assert captured["body"]["stream"] is False
+    assert captured["body"]["messages"] == [{"role": "user", "content": "rank these"}]
+    assert captured["body"]["model"] == ollama_client.DEFAULT_MODEL

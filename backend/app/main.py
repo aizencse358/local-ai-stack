@@ -7,6 +7,7 @@ from fastapi.responses import StreamingResponse
 
 from app.chunking import chunk_text
 from app.ollama_client import embed, stream_chat
+from app.rerank import rerank
 from app.schemas import (
     ChatMessage,
     ChatRequest,
@@ -96,7 +97,8 @@ async def _chat_stream(request: ChatRequest):
     if request.rag and request.messages:
         user_query = request.messages[-1].content
         query_embedding = (await embed([user_query]))[0]
-        hits = query(query_embedding, top_k=4)
+        candidates = query(query_embedding, top_k=10)
+        hits = await rerank(user_query, candidates, top_k=4)
         if hits:
             yield f"data: {json.dumps({'sources': hits})}\n\n"
             excerpt_text = "\n\n".join(f"[{hit['filename']}]\n{hit['text']}" for hit in hits)
