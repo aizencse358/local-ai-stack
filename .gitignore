@@ -10,3 +10,4 @@ build/
 .claude/
 chroma_data/
 *.db
+.pytest_cache/

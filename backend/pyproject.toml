@@ -11,3 +11,10 @@ dependencies = [
     "chromadb==0.5.23",
     "python-multipart==0.0.9",
 ]
+
+[dependency-groups]
+dev = ["pytest==8.3.3"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
