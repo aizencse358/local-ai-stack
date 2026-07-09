@@ -1,5 +1,7 @@
 # Local AI Integration Stack — Streaming Chat UI
 
+[![CI](https://github.com/aizencse358/local-ai-stack/actions/workflows/ci.yml/badge.svg)](https://github.com/aizencse358/local-ai-stack/actions/workflows/ci.yml)
+
 A foundational project for learning how local LLMs, a backend server, and a
 frontend UI wire together end-to-end.
 
