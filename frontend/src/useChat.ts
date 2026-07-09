@@ -1,15 +1,18 @@
 import { useCallback, useRef, useState } from 'react'
-import type { ChatMessage, RetrievedChunk } from './types'
+import type { ChatMessage, RetrievedChunk, SessionDetail } from './types'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000'
 
-export function useChat() {
+export function useChat(onSessionCreated?: (id: string) => void) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isStreaming, setIsStreaming] = useState(false)
   const abortRef = useRef<AbortController | null>(null)
 
   const sendMessage = useCallback(
-    async (content: string, options?: { system?: string; context?: string; rag?: boolean }) => {
+    async (
+      content: string,
+      options?: { system?: string; context?: string; rag?: boolean; sessionId?: string | null },
+    ) => {
       const userMessage: ChatMessage = { role: 'user', content }
       const history = [...messages, userMessage]
       setMessages([...history, { role: 'assistant', content: '' }])
@@ -27,6 +30,7 @@ export function useChat() {
             system: options?.system || undefined,
             context: options?.context || undefined,
             rag: options?.rag || undefined,
+            session_id: options?.sessionId || undefined,
           }),
           signal: controller.signal,
         })
@@ -59,7 +63,16 @@ export function useChat() {
               break
             }
 
-            const parsed = JSON.parse(payload) as { token?: string; sources?: RetrievedChunk[] }
+            const parsed = JSON.parse(payload) as {
+              token?: string
+              sources?: RetrievedChunk[]
+              session_id?: string
+            }
+
+            if (parsed.session_id) {
+              onSessionCreated?.(parsed.session_id)
+              continue
+            }
 
             if (parsed.sources) {
               setMessages((prev) => {
@@ -98,12 +111,20 @@ export function useChat() {
         abortRef.current = null
       }
     },
-    [messages],
+    [messages, onSessionCreated],
   )
 
   const stop = useCallback(() => {
     abortRef.current?.abort()
   }, [])
 
-  return { messages, sendMessage, isStreaming, stop }
+  const loadSession = useCallback((detail: SessionDetail) => {
+    setMessages(detail.messages)
+  }, [])
+
+  const reset = useCallback(() => {
+    setMessages([])
+  }, [])
+
+  return { messages, sendMessage, isStreaming, stop, loadSession, reset }
 }

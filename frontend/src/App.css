@@ -27,7 +27,8 @@
 
 .system-prompt,
 .document-context,
-.document-upload {
+.document-upload,
+.session-list {
   margin-bottom: 16px;
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -36,10 +37,71 @@
 
 .system-prompt summary,
 .document-context summary,
-.document-upload summary {
+.document-upload summary,
+.session-list summary {
   cursor: pointer;
   font-size: 14px;
   color: var(--text);
+}
+
+.new-chat-button {
+  display: block;
+  margin-top: 8px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--accent-border);
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.session-list ul {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.session-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.session-list li.active button:first-child {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.session-list li button:first-child {
+  flex: 1;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 4px 0;
+  font: inherit;
+  font-size: 14px;
+  color: var(--text-h);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.session-list .delete-button {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  border-radius: 6px;
+  width: 22px;
+  height: 22px;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
 }
 
 .rag-toggle {

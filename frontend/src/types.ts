@@ -17,3 +17,16 @@ export interface DocumentInfo {
   filename: string
   chunk_count: number
 }
+
+export interface SessionInfo {
+  id: string
+  title: string
+  created_at: string
+}
+
+export interface SessionDetail {
+  id: string
+  title: string
+  created_at: string
+  messages: ChatMessage[]
+}

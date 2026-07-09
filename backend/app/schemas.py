@@ -3,9 +3,16 @@ from typing import Literal, Optional
 from pydantic import BaseModel
 
 
+class RetrievedChunk(BaseModel):
+    filename: str
+    text: str
+    score: float
+
+
 class ChatMessage(BaseModel):
     role: Literal["system", "user", "assistant"]
     content: str
+    sources: Optional[list[RetrievedChunk]] = None
 
 
 class ChatRequest(BaseModel):
@@ -14,12 +21,7 @@ class ChatRequest(BaseModel):
     system: Optional[str] = None
     context: Optional[str] = None
     rag: Optional[bool] = False
-
-
-class RetrievedChunk(BaseModel):
-    filename: str
-    text: str
-    score: float
+    session_id: Optional[str] = None
 
 
 class DocumentInfo(BaseModel):
@@ -32,3 +34,16 @@ class IngestResponse(BaseModel):
     document_id: str
     filename: str
     chunk_count: int
+
+
+class SessionInfo(BaseModel):
+    id: str
+    title: str
+    created_at: str
+
+
+class SessionDetail(BaseModel):
+    id: str
+    title: str
+    created_at: str
+    messages: list[ChatMessage]
